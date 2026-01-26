@@ -1,17 +1,11 @@
 #include <Arduino.h>
 
-// Pin Definitions
-// const int PIN_TRIGGER = 1; // with Led
-// const int PIN_CLOCK = 2;
-// const int PIN_SHIFT = 3;  // Hold this to change BPM
-// const int PIN_REPEAT = 4; // Also BPM UP
-// const int PIN_MUTE = 5;   // Also BPM DOWN
-
 const int PIN_TRIGGER = 0; // with Led
 const int PIN_CLOCK = 1;
 const int PIN_SHIFT = 2;  // Hold this to change BPM
 const int PIN_REPEAT = 3; // Also BPM UP
 const int PIN_MUTE = 4;   // Also BPM DOWN
+
 
 // Timing & Logic
 int bpm = 160;
@@ -71,9 +65,9 @@ void loop()
     lastStepTime = millis();
 
     // bool isMuted = (digitalRead(PIN_MUTE) == LOW && !shiftHeld);
-    // bool isRepeat = (digitalRead(PIN_REPEAT) == LOW && !shiftHeld);
+    bool isRepeat = (digitalRead(PIN_REPEAT) == LOW && !shiftHeld);
     bool isMuted = false;
-    bool isRepeat = false;
+    // bool isRepeat = false;
     bool triggerNow = false;
 
     int positionInBar = stepCounter % 4;
@@ -81,7 +75,7 @@ void loop()
 
     if (isRepeat)
     {
-      triggerNow = true;
+      triggerNow = positionInBar == 0 || positionInBar == 2;
     }
     else
     {
