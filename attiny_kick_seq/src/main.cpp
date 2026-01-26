@@ -13,7 +13,7 @@ int stepCounter = 0;
 
 // Debouncing and scrolling for BPM buttons
 unsigned long lastBpmChange = 0;
-const int scrollSpeed = 250; // Time in ms between BPM changes when held
+const int scrollSpeed = 150; // Time in ms between BPM changes when held
 
 void setup()
 {
