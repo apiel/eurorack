@@ -2,10 +2,9 @@
 
 const int PIN_TRIGGER = 0; // with Led
 const int PIN_CLOCK = 1;
-const int PIN_SHIFT = 2;  // Hold this to change BPM
-const int PIN_REPEAT = 3; // Also BPM UP
-const int PIN_MUTE = 4;   // Also BPM DOWN
-
+const int PIN_SHIFT = 2;   // Hold this to change BPM
+// P3 will now handle both Repeat and Mute via analogRead
+const int PIN_ANALOG_BUTTONS = 3; 
 
 // Timing & Logic
 int bpm = 160;
@@ -21,61 +20,64 @@ void setup()
   pinMode(PIN_TRIGGER, OUTPUT);
   pinMode(PIN_CLOCK, OUTPUT);
   pinMode(PIN_SHIFT, INPUT_PULLUP);
-  pinMode(PIN_REPEAT, INPUT_PULLUP);
-  pinMode(PIN_MUTE, INPUT_PULLUP);
+  // P3 doesn't need INPUT_PULLUP for analogRead on Digispark (hardware pull-up exists)
 
-  randomSeed(analogRead(A1)); // Seed from the now-empty Analog pin
+  randomSeed(analogRead(1)); // Seed from P2/A1
 }
 
 void loop()
 {
+  // --- Read Analog Buttons on P3 ---
+  int analogVal = analogRead(3); 
+  
+  // Thresholds based on 1.5k internal pull-up + 4.7k resistor ladder
+  bool repeatPressed = (analogVal > 900);             // To 5v
+  bool mutePressed   = (analogVal > 500 && analogVal < 900); // to 3.3v or Through 4.7k
+  
   bool shiftHeld = (digitalRead(PIN_SHIFT) == LOW);
 
   // --- BPM Change Logic (Only when Shift is held) ---
   if (shiftHeld)
   {
-    // Check UP button
-    if (digitalRead(PIN_REPEAT) == LOW && !upPressed)
+    if (repeatPressed && !upPressed)
     {
-      bpm = min(bpm + 5, 300); // Cap at 300 BPM
+      bpm = min(bpm + 5, 300);
       upPressed = true;
     }
-    else if (digitalRead(PIN_REPEAT) == HIGH)
+    else if (!repeatPressed)
     {
       upPressed = false;
     }
 
-    // Check DOWN button
-    if (digitalRead(PIN_MUTE) == LOW && !downPressed)
+    if (mutePressed && !downPressed)
     {
-      bpm = max(bpm - 5, 40); // Floor at 40 BPM
+      bpm = max(bpm - 5, 40);
       downPressed = true;
     }
-    else if (digitalRead(PIN_MUTE) == HIGH)
+    else if (!mutePressed)
     {
       downPressed = false;
     }
   }
 
   // --- Sequencer Logic ---
+  // Note: 15000 / bpm = 16th notes. If too fast, change to 30000 (8th notes).
   unsigned long stepDuration = 15000 / bpm;
 
   if (millis() - lastStepTime >= stepDuration)
   {
     lastStepTime = millis();
 
-    // bool isMuted = (digitalRead(PIN_MUTE) == LOW && !shiftHeld);
-    bool isRepeat = (digitalRead(PIN_REPEAT) == LOW && !shiftHeld);
-    bool isMuted = false;
-    // bool isRepeat = false;
+    bool isRepeat = (repeatPressed && !shiftHeld);
+    bool isMuted  = (mutePressed && !shiftHeld);
     bool triggerNow = false;
 
     int positionInBar = stepCounter % 4;
-    int loop = stepCounter % 32;
+    int loopPos = stepCounter % 32;
 
     if (isRepeat)
     {
-      triggerNow = positionInBar == 0 || positionInBar == 2;
+      triggerNow = (positionInBar == 0 || positionInBar == 2);
     }
     else
     {
@@ -83,15 +85,10 @@ void loop()
       {
         triggerNow = true;
       }
-      // last 4 steps of a bar
-      else if (loop > 28 && random(100) < 70)
+      else if (loopPos > 28 && random(100) < 70)
       {
         triggerNow = true;
       }
-      // else if (random(100) < 1)
-      // {
-      //   triggerNow = true;
-      // }
     }
 
     // --- Output Execution ---
