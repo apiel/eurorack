@@ -11,9 +11,9 @@ int bpm = 160;
 unsigned long lastStepTime = 0;
 int stepCounter = 0;
 
-// Debouncing for BPM buttons
-bool upPressed = false;
-bool downPressed = false;
+// Debouncing and scrolling for BPM buttons
+unsigned long lastBpmChange = 0;
+const int scrollSpeed = 250; // Time in ms between BPM changes when held
 
 void setup()
 {
@@ -39,24 +39,14 @@ void loop()
   // --- BPM Change Logic (Only when Shift is held) ---
   if (shiftHeld)
   {
-    if (repeatPressed && !upPressed)
+    if (mutePressed || repeatPressed)
     {
-      bpm = min(bpm + 5, 300);
-      upPressed = true;
-    }
-    else if (!repeatPressed)
-    {
-      upPressed = false;
-    }
-
-    if (mutePressed && !downPressed)
-    {
-      bpm = max(bpm - 5, 40);
-      downPressed = true;
-    }
-    else if (!mutePressed)
-    {
-      downPressed = false;
+      // Use a timer to debounce and allow "scrolling" when held
+      if (millis() - lastBpmChange >= scrollSpeed)
+      {
+        bpm = mutePressed ? min(bpm + 5, 300) : max(bpm - 5, 40);
+        lastBpmChange = millis();
+      }
     }
   }
 
