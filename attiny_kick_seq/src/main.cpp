@@ -1,10 +1,15 @@
 #include <Arduino.h>
 
-const int PIN_TRIGGER = 0; // with Led
-const int PIN_CLOCK = 1;
+// TODO try to use to move trigger to p4
+// Add input on P0 maybe for bpm
+// then use P2 as analog input for potentiometer
+
+const int PIN_CLOCK = 0;
+// const int PIN_CLOCK = 1; // with Led
+const int PIN_ANALOG_POT = 1;
 const int PIN_SHIFT = 2;   // Hold this to change BPM
-// P3 will now handle both Repeat and Mute via analogRead
 const int PIN_ANALOG_BUTTONS = 3; 
+const int PIN_TRIGGER = 4; 
 
 // Timing & Logic
 int bpm = 160;
@@ -27,8 +32,10 @@ void setup()
 
 void loop()
 {
+  // DigiUSB.refresh(); // if using USB, need #include <DigiUSB.h>
+
   // --- Read Analog Buttons on P3 ---
-  int analogVal = analogRead(3); 
+  int analogVal = analogRead(PIN_ANALOG_BUTTONS); 
   
   // Thresholds based on 1.5k internal pull-up + 4.7k resistor ladder
   bool repeatPressed = (analogVal > 900);             // To 5v
