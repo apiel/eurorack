@@ -6,9 +6,9 @@
 
 const int PIN_TBD = 0;
 const int PIN_CLOCK = 1; // with Led
-const int PIN_SHIFT = 2;   // Hold this to change BPM
-const int PIN_ANALOG_BUTTONS = 3; 
-const int PIN_TRIGGER = 4; 
+const int PIN_SHIFT = 2; // Hold this to change BPM
+const int PIN_ANALOG_BUTTONS = 3;
+const int PIN_TRIGGER = 4;
 
 // Timing & Logic
 int bpm = 160;
@@ -35,12 +35,12 @@ void loop()
   // DigiUSB.refresh(); // if using USB, need #include <DigiUSB.h>
 
   // --- Read Analog Buttons on P3 ---
-  int analogVal = analogRead(PIN_ANALOG_BUTTONS); 
-  
+  int analogVal = analogRead(PIN_ANALOG_BUTTONS);
+
   // Thresholds based on 1.5k internal pull-up + 4.7k resistor ladder
-  bool repeatPressed = (analogVal > 900);             // To 5v
-  bool mutePressed   = (analogVal > 500 && analogVal < 900); // to 3.3v or Through 4.7k
-  
+  bool repeatPressed = (analogVal > 900);                  // To 5v
+  bool mutePressed = (analogVal > 500 && analogVal < 900); // to 3.3v or Through 4.7k
+
   bool shiftHeld = (digitalRead(PIN_SHIFT) == LOW);
   bool tbdPressed = (digitalRead(PIN_TBD) == LOW);
 
@@ -67,26 +67,45 @@ void loop()
     lastStepTime = millis();
 
     bool isRepeat = (repeatPressed && !shiftHeld);
-    bool isMuted  = (mutePressed && !shiftHeld) || tbdPressed;
+    bool isMuted = (mutePressed && !shiftHeld);
     bool triggerNow = false;
 
     int positionInBar = stepCounter % 4;
-    int loopPos = stepCounter % 32;
+    int loopPos64 = stepCounter % 64;
+    int loopPos32 = stepCounter % 32;
 
-    if (isRepeat)
+    if (tbdPressed)
+    {
+      // Instead of this, we could TBD to set different patterns...
+      // Now it random between step 28 and 32
+      // instead we could set either 28/32 or 60/64
+      triggerNow = true;
+    }
+    else if (isRepeat)
     {
       triggerNow = (positionInBar == 0 || positionInBar == 2);
     }
+    else if (positionInBar == 0)
+    {
+      triggerNow = true;
+    }
+    else if (loopPos64 > 60 && random(100) < 60)
+    {
+      triggerNow = true;
+    }
+    // Let's make those step less probable
+    else if ((loopPos32 == 29 || loopPos32 == 31) && random(100) < 20)
+    {
+      triggerNow = true;
+    }
+    // in the end only step 30 is at 40% but we keep this logic in case we remove the previous condition
+    else if (loopPos32 > 28 && random(100) < 40)
+    {
+      triggerNow = true;
+    }
     else
     {
-      if (positionInBar == 0)
-      {
-        triggerNow = true;
-      }
-      else if (loopPos > 28 && random(100) < 70)
-      {
-        triggerNow = true;
-      }
+      triggerNow = random(100) < 1;
     }
 
     // --- Output Execution ---
