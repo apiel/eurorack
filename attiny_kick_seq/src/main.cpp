@@ -4,9 +4,8 @@
 // Add input on P0 maybe for bpm
 // then use P2 as analog input for potentiometer
 
-const int PIN_CLOCK = 0;
-// const int PIN_CLOCK = 1; // with Led
-const int PIN_ANALOG_POT = 1;
+const int PIN_TBD = 0;
+const int PIN_CLOCK = 1; // with Led
 const int PIN_SHIFT = 2;   // Hold this to change BPM
 const int PIN_ANALOG_BUTTONS = 3; 
 const int PIN_TRIGGER = 4; 
@@ -25,6 +24,7 @@ void setup()
   pinMode(PIN_TRIGGER, OUTPUT);
   pinMode(PIN_CLOCK, OUTPUT);
   pinMode(PIN_SHIFT, INPUT_PULLUP);
+  pinMode(PIN_TBD, INPUT_PULLUP);
   // P3 doesn't need INPUT_PULLUP for analogRead on Digispark (hardware pull-up exists)
 
   randomSeed(analogRead(1)); // Seed from P2/A1
@@ -42,6 +42,7 @@ void loop()
   bool mutePressed   = (analogVal > 500 && analogVal < 900); // to 3.3v or Through 4.7k
   
   bool shiftHeld = (digitalRead(PIN_SHIFT) == LOW);
+  bool tbdPressed = (digitalRead(PIN_TBD) == LOW);
 
   // --- BPM Change Logic (Only when Shift is held) ---
   if (shiftHeld)
@@ -66,7 +67,7 @@ void loop()
     lastStepTime = millis();
 
     bool isRepeat = (repeatPressed && !shiftHeld);
-    bool isMuted  = (mutePressed && !shiftHeld);
+    bool isMuted  = (mutePressed && !shiftHeld) || tbdPressed;
     bool triggerNow = false;
 
     int positionInBar = stepCounter % 4;
