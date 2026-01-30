@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "CppWrapper.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,69 +58,6 @@ static void MX_DAC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#include <math.h>
-
-typedef struct
-{
-  float velocity;
-  float phase;
-  float pitchEnv;
-  float clickEnv;
-  float lpState;
-  float sampleRate;
-} KickEngine;
-
-KickEngine kick = {.sampleRate = 44100.0f};
-
-// This mimics your sampleOn logic
-uint16_t Process_Kick_Sample(float velocity)
-{
-  // 1. Internal Envelopes (Simulating the C++ expf decay)
-  kick.pitchEnv *= 0.9992f; // Slower pitch sweep (more "booooom")
-  kick.clickEnv *= 0.995f;  // Slower click decay
-
-  // 2. Frequency Logic
-  float rootFreq = 45.0f;
-  float sweepDepth = 600.0f;
-  float currentFreq = rootFreq + (sweepDepth * kick.pitchEnv);
-
-  // 3. Oscillator
-  // We use a simplified sample rate since we aren't using a hardware timer yet
-  kick.phase += currentFreq / 20000.0f;
-  if (kick.phase > 1.0f)
-    kick.phase -= 1.0f;
-
-  float rawSine = sinf(2.0f * 3.14159f * kick.phase);
-
-  // 4. Symmetry / Drive (Waveshaping)
-  // Pushes the sound to be "grittier"
-  float shaped = (rawSine + 0.6f * (rawSine * rawSine * rawSine)) / 1.6f;
-
-  // 5. Add Click (Noise-ish transient)
-  // We'll use a simple high-frequency pulse for the "lofi" click
-  float click = (kick.phase < 0.1f) ? kick.clickEnv : 0;
-
-  // 6. Master Amplitude (Fade out over the 2500 samples)
-  // This prevents the speaker from popping at the end
-  float finalMix = (shaped + click) * kick.pitchEnv * velocity;
-
-  // 7. Map to DAC (0 to 4095, where 2048 is silence/middle)
-  int32_t out = (int32_t)((finalMix + 1.0f) * 2047.0f);
-
-  // Inside your function:
-  float compressAmount = 0.5f;
-  // We normalize to 0.0-1.0 range before pow, then scale back
-  float normalized = (float)out / 4095.0f;
-  normalized = powf(normalized, 1.0f - compressAmount * 0.8f);
-  out = (int32_t)(normalized * 4095.0f);
-
-  if (out > 4095)
-    out = 4095;
-  if (out < 0)
-    out = 0;
-
-  return (uint16_t)out;
-}
 /* USER CODE END 0 */
 
 /**
@@ -158,14 +95,14 @@ int main(void)
   MX_DAC1_Init();
 
   /* USER CODE BEGIN 2 */
-  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1); // Initialize the DAC
+  Cpp_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Play_Kick(&hdac1);
+    Cpp_TriggerKick();
     HAL_Delay(500); // 120 BPM Kick
     /* USER CODE END WHILE */
 
@@ -175,37 +112,6 @@ int main(void)
 }
 
 /* USER CODE BEGIN 0 */
-void Play_Kick(DAC_HandleTypeDef *hdac)
-{
-  // 1. Reset Engine State for a new "Note On"
-  kick.phase = 0.0f;
-  kick.pitchEnv = 1.0f;
-  kick.clickEnv = 1.0f;
-  kick.velocity = 1.0f;
-
-  // 2. LED ON
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
-
-  // 3. The "Sample" Loop (roughly 2000 iterations for a short kick)
-  for (int s = 0; s < 10000; s++)
-  {
-
-    // Call the engine math (passing 1.0f as a placeholder for volume envelope)
-    uint16_t dac_val = Process_Kick_Sample(1.0f);
-
-    // Send to DAC
-    HAL_DAC_SetValue(hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, dac_val);
-
-    // This delay controls the "Sample Rate" of your loop.
-    // Adjust '20' to make the kick longer/shorter (Lower = faster/higher pitch)
-    for (volatile int d = 0; d < 30; d++)
-      ;
-  }
-
-  // 4. Silence and LED OFF
-  HAL_DAC_SetValue(hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, 2047); // Center point for AC
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
-}
 /* USER CODE END 0 */
 
 /**
