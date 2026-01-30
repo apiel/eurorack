@@ -24,6 +24,8 @@ public:
     }
 
     uint16_t process(float velocity) {
+        if (pitchEnv < 0.0001f) return 2048; // Return silence if envelope died
+        
         #if DEBUG_BEEP
             // Simple 440Hz-ish Square Wave for hardware testing
             phase += 0.01f; 

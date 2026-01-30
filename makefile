@@ -1,0 +1,2 @@
+watch:
+	sudo dmesg -w

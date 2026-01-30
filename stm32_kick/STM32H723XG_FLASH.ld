@@ -196,7 +196,14 @@ SECTIONS
     . = ALIGN(8);
   } >DTCMRAM
 
-
+  /* New section for DMA buffers in AXI SRAM */
+  .RAM_D1 (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.RAM_D1)
+    *(.RAM_D1*)
+    . = ALIGN(32);
+  } >RAM_D1
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
