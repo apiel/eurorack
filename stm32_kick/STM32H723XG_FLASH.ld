@@ -16,7 +16,7 @@
 **
 **  Target      : STMicroelectronics STM32
 **
-**  Distribution: The file is distributed “as is,” without any warranty
+**  Distribution: The file is distributed "as is," without any warranty
 **                of any kind.
 **
 *****************************************************************************
@@ -205,6 +205,15 @@ SECTIONS
     . = ALIGN(32);
   } >RAM_D1
 
+  /* DMA buffers in AHB SRAM (RAM_D2) - ADDED FOR DAC DMA */
+  .RAM_D2 (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.RAM_D2)
+    *(.RAM_D2*)
+    . = ALIGN(32);
+  } >RAM_D2
+
   /* Remove information from the standard libraries */
   /DISCARD/ :
   {
@@ -214,5 +223,3 @@ SECTIONS
   }
 
 }
-
-
