@@ -21,3 +21,10 @@ build_sine2:
 
 flash_sine2:
 	sudo dfu-util -a 0 -D sine2.bin -s 0x08000000:leave
+
+build_sineDMA:
+	arm-none-eabi-gcc -mcpu=cortex-m7 -mthumb -O2 -g -nostdlib -T STM32H723VGTx_FLASH.ld -e _start sineDMA.c -o sineDMA.elf
+	arm-none-eabi-objcopy -O binary sineDMA.elf sineDMA.bin
+
+flash_sineDMA:
+	sudo dfu-util -a 0 -D sineDMA.bin -s 0x08000000:leave
