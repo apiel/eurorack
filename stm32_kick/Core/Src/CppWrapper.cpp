@@ -47,10 +47,11 @@ void Display_Init()
 
     // Set backlight to 70%
     // display.setBacklight(70);
-    // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_SET);
-    // HAL_Delay(500);
-    HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_RESET);
-    // HAL_Delay(500);
+
+    // Display is on when gpio is low (default value set in .ioc)
+    // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_RESET); // display on
+    // Display is off when gpio is high
+    // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_SET); // display off
 }
 
 void Cpp_Init(void)

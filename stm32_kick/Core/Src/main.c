@@ -401,10 +401,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, LED_Pin|DISPLAY_BL_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin|LCD_CS_Pin|LCD_DC_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, LCD_CS_Pin|LCD_DC_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : LED_Pin DISPLAY_BL_Pin */
   GPIO_InitStruct.Pin = LED_Pin|DISPLAY_BL_Pin;
