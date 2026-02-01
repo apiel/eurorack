@@ -142,28 +142,28 @@ public:
         HAL_Delay(100);
         
         // Turn on backlight via PWM
-        backlightOn();
+        // backlightOn();
         
         // Clear screen
         fillScreen(BLACK);
     }
     
-    void backlightOn() {
-        // Start PWM on TIM1 Channel 2N
-        // Note: OCNPolarity is set to LOW in IOC, so PWM is inverted
-        HAL_TIM_PWM_Start(htim, TIM_CHANNEL_2);
-    }
+    // void backlightOn() {
+    //     // Start PWM on TIM1 Channel 2N
+    //     // Note: OCNPolarity is set to LOW in IOC, so PWM is inverted
+    //     HAL_TIM_PWM_Start(htim, TIM_CHANNEL_2);
+    // }
     
-    void backlightOff() {
-        HAL_TIM_PWM_Stop(htim, TIM_CHANNEL_2);
-    }
+    // void backlightOff() {
+    //     HAL_TIM_PWM_Stop(htim, TIM_CHANNEL_2);
+    // }
     
-    void setBacklight(uint8_t brightness) {
-        // brightness: 0-100
-        // TIM1 Period is 1000-1 from IOC
-        uint32_t pulse = (brightness * 1000) / 100;
-        __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, pulse);
-    }
+    // void setBacklight(uint8_t brightness) {
+    //     // brightness: 0-100
+    //     // TIM1 Period is 1000-1 from IOC
+    //     uint32_t pulse = (brightness * 1000) / 100;
+    //     __HAL_TIM_SET_COMPARE(htim, TIM_CHANNEL_2, pulse);
+    // }
     
     void fillScreen(uint16_t color) {
         fillRect(0, 0, width, height, color);

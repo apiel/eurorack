@@ -46,7 +46,11 @@ void Display_Init()
     display.drawCircle(40, 80, 35, ST7735::WHITE);
 
     // Set backlight to 70%
-    display.setBacklight(70);
+    // display.setBacklight(70);
+    // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_SET);
+    // HAL_Delay(500);
+    HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_RESET);
+    // HAL_Delay(500);
 }
 
 void Cpp_Init(void)
