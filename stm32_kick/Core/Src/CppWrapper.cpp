@@ -48,18 +48,28 @@ extern "C" void Encoder_ButtonCallback(uint16_t GPIO_Pin)
 // #define TEST_MODE 1
 
 int x = 80;
+int16_t lastY = -1; // Add as global
 void Render_Display()
 {
-    // Simple test pattern
-    display.fillScreen(ST7735::BLACK);
+    if (x == lastY) return; // Skip if no change
+
+    // Erase old circle
+    if (lastY >= 0) {
+        display.fillCircle(40, lastY, 16, ST7735::BLACK);
+    }
+
+    // Draw new circle
     display.fillCircle(40, x, 10, ST7735::RED);
     display.drawCircle(40, x, 15, ST7735::WHITE);
+
+    lastY = x;
 }
 
 void Display_Init()
 {
     display.init();
 
+    display.fillScreen(ST7735::BLACK);
     Render_Display();
 
     // Display is on when gpio is low (default value set in .ioc)
@@ -151,7 +161,8 @@ void Cpp_Init(void)
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
 }
 
-void Cpp_Loop(void) {
+void Cpp_Loop(void)
+{
     encoder.update();
 }
 
