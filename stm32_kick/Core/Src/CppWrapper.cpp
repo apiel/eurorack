@@ -9,6 +9,7 @@ extern "C" TIM_HandleTypeDef htim1;
 extern "C" SPI_HandleTypeDef hspi4;
 extern "C" TIM_HandleTypeDef htim4;
 extern "C" TIM_HandleTypeDef htim6;
+extern "C" TIM_HandleTypeDef htim7; 
 extern "C" DMA_HandleTypeDef hdma_dac1_ch1;
 
 #define BUFFER_SIZE 256
@@ -49,14 +50,9 @@ extern "C" void Encoder_ButtonCallback(uint16_t GPIO_Pin)
 
 int x = 80;
 int16_t lastY = -1; // Add as global
-uint32_t lastRenderTime = 0;
-void Render_Display()
+extern "C" void Display_TimerCallback(void)
 {
     if (x == lastY) return; // Skip if no change
-
-    uint32_t now = HAL_GetTick();
-    if (now - lastRenderTime < 50) return; // Skip if too soon
-    lastRenderTime = now;
 
     // Erase old circle
     if (lastY >= 0) {
@@ -64,7 +60,7 @@ void Render_Display()
     }
 
     // Draw new circle
-    display.fillCircle(40, x, 10, ST7735::RED);
+    display.fillCircle(40, x, 10, x % 2 == 0 ? ST7735::GREEN : ST7735::RED);
     display.drawCircle(40, x, 15, ST7735::WHITE);
 
     lastY = x;
@@ -75,7 +71,9 @@ void Display_Init()
     display.init();
 
     display.fillScreen(ST7735::BLACK);
-    Render_Display();
+    Display_TimerCallback();
+
+    HAL_TIM_Base_Start_IT(&htim7);
 
     // Display is on when gpio is low (default value set in .ioc)
     // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_RESET); // display on
@@ -169,7 +167,6 @@ void Cpp_Init(void)
 void Cpp_Loop(void)
 {
     encoder.update();
-    Render_Display();
 }
 
 void Fill_Buffer(int start_index, int size)
