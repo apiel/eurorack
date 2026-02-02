@@ -37,6 +37,7 @@ private:
     static constexpr uint8_t SLPOUT  = 0x11;
     static constexpr uint8_t NORON   = 0x13;
     static constexpr uint8_t INVOFF  = 0x20;
+    static constexpr uint8_t INVON   = 0x21;
     static constexpr uint8_t DISPON  = 0x29;
     static constexpr uint8_t CASET   = 0x2A;
     static constexpr uint8_t RASET   = 0x2B;
@@ -123,7 +124,8 @@ public:
         writeData(0x0E);
         
         // Display inversion off
-        writeCommand(INVOFF);
+        // writeCommand(INVOFF);
+        writeCommand(INVON);
         
         // Memory access control
         writeCommand(MADCTL);
