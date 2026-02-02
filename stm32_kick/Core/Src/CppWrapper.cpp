@@ -49,9 +49,14 @@ extern "C" void Encoder_ButtonCallback(uint16_t GPIO_Pin)
 
 int x = 80;
 int16_t lastY = -1; // Add as global
+uint32_t lastRenderTime = 0;
 void Render_Display()
 {
     if (x == lastY) return; // Skip if no change
+
+    uint32_t now = HAL_GetTick();
+    if (now - lastRenderTime < 50) return; // Skip if too soon
+    lastRenderTime = now;
 
     // Erase old circle
     if (lastY >= 0) {
@@ -89,11 +94,11 @@ void Encoder_Init(void)
         if (dir == RotaryEncoder::Direction::CW) {
             // Clockwise
             x++;
-            Render_Display();
+            // Render_Display();
         } else if (dir == RotaryEncoder::Direction::CCW) {
             // Counter-clockwise
             x--;
-            Render_Display();
+            // Render_Display();
         }
     });
 
@@ -164,6 +169,7 @@ void Cpp_Init(void)
 void Cpp_Loop(void)
 {
     encoder.update();
+    Render_Display();
 }
 
 void Fill_Buffer(int start_index, int size)
