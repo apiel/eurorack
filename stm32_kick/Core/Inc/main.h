@@ -65,6 +65,13 @@ void Error_Handler(void);
 #define LCD_CS_GPIO_Port GPIOE
 #define LCD_DC_Pin GPIO_PIN_13
 #define LCD_DC_GPIO_Port GPIOE
+#define ENC_A_Pin GPIO_PIN_12
+#define ENC_A_GPIO_Port GPIOD
+#define ENC_B_Pin GPIO_PIN_13
+#define ENC_B_GPIO_Port GPIOD
+#define ENC_BTN_Pin GPIO_PIN_14
+#define ENC_BTN_GPIO_Port GPIOD
+#define ENC_BTN_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE BEGIN Private defines */
 

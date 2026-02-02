@@ -1,4 +1,5 @@
 #include "CppWrapper.h"
+#include "RotaryEncoder.hpp"
 #include "ST7735.hpp"
 #include "kick.hpp"
 #include "main.h"
@@ -6,6 +7,7 @@
 extern "C" DAC_HandleTypeDef hdac1;
 extern "C" TIM_HandleTypeDef htim1;
 extern "C" SPI_HandleTypeDef hspi4;
+extern "C" TIM_HandleTypeDef htim4;
 extern "C" TIM_HandleTypeDef htim6;
 extern "C" DMA_HandleTypeDef hdma_dac1_ch1;
 
@@ -23,6 +25,9 @@ const uint32_t SAMPLES_PER_BEAT = (uint32_t)(SAMPLE_RATE * 60.0f / BPM);
 // Display
 ST7735 display(&hspi4, &htim1);
 
+// Encoder
+RotaryEncoder encoder(&htim4);
+
 // Kick state
 volatile uint32_t sampleCounter = 0;
 volatile bool kickActive = false;
@@ -33,25 +38,59 @@ volatile uint32_t half_complete_count = 0;
 volatile uint32_t full_complete_count = 0;
 volatile uint32_t kicks_triggered = 0;
 
+// Button callback for interrupt
+extern "C" void Encoder_ButtonCallback(uint16_t GPIO_Pin)
+{
+    encoder.handleButtonInterrupt();
+}
+
 // TEST MODE: Set to 1 for simple square wave, 0 for kick
 // #define TEST_MODE 1
+
+int x = 80;
+void Render_Display()
+{
+    // Simple test pattern
+    display.fillScreen(ST7735::BLACK);
+    display.fillCircle(40, x, 10, ST7735::RED);
+    display.drawCircle(40, x, 15, ST7735::WHITE);
+}
 
 void Display_Init()
 {
     display.init();
 
-    // Simple test pattern
-    display.fillScreen(ST7735::BLACK);
-    display.fillCircle(40, 80, 30, ST7735::RED);
-    display.drawCircle(40, 80, 35, ST7735::WHITE);
-
-    // Set backlight to 70%
-    // display.setBacklight(70);
+    Render_Display();
 
     // Display is on when gpio is low (default value set in .ioc)
     // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_RESET); // display on
     // Display is off when gpio is high
     // HAL_GPIO_WritePin(GPIOE, DISPLAY_BL_Pin, GPIO_PIN_SET); // display off
+}
+
+void Encoder_Init(void)
+{
+    // Initialize encoder
+    encoder.init();
+
+    // Set up callbacks
+    encoder.setRotateCallback([](int32_t value, RotaryEncoder::Direction dir) {
+        // Called on rotation
+        if (dir == RotaryEncoder::Direction::CW) {
+            // Clockwise
+            x++;
+            Render_Display();
+        } else if (dir == RotaryEncoder::Direction::CCW) {
+            // Counter-clockwise
+            x--;
+            Render_Display();
+        }
+    });
+
+    encoder.setButtonCallback([]() {
+        // Called on button press
+        HAL_GPIO_TogglePin(GPIOE, DISPLAY_BL_Pin);
+    });
 }
 
 void Cpp_Init(void)
@@ -65,6 +104,8 @@ void Cpp_Init(void)
     // Initialize display FIRST (before audio)
     // If display hangs, we'll know before audio starts
     Display_Init();
+
+    Encoder_Init();
 
     // Initialize buffer with silence
     for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -108,6 +149,10 @@ void Cpp_Init(void)
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
     HAL_Delay(1000);
     HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
+}
+
+void Cpp_Loop(void) {
+    encoder.update();
 }
 
 void Fill_Buffer(int start_index, int size)

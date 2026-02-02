@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 void Cpp_Init(void);
+void Cpp_Loop(void);
 void Cpp_TriggerKick(void);
 
 #ifdef __cplusplus
